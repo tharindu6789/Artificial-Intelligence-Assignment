@@ -87,7 +87,7 @@ Most Twitter users turn off their location in their privacy settings but those t
 coffee_tweets %>% 
   filter(!is.na(source)) %>% 
   count(source, sort = TRUE) %>% 
-  top_n(5)
+  top_n(10)
 ```
 
 ### Most frequently shared link
