@@ -1,0 +1,196 @@
+---
+title: "Twitter coffee - w2"
+author: "Tharindu"
+date: "12/08/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+install.packages("rtweet")
+install.packages("emo")
+install.packages("tidytext")
+install.packages("tidyverse")
+
+install.packages("ggplot2")
+install.packages("ggraph")
+install.packages("igraph")
+install.packages("ggmap")
+
+library(tidyverse)
+library(rtweet)
+library(ggplot2)
+library(ggraph)
+library(igraph)
+library(ggmap)
+
+```
+
+## Data import
+
+Step 1. collect tweets about coffee
+
+```{r}
+auth_setup_default()
+coffee_tweets<-search_tweets(
+  q="BMW",
+  n=20000,
+  include_rts = FALSE,
+  lang="en",
+  retryonratelimit = TRUE
+)
+
+```
+
+Cleaner version:
+
+```{r}
+#look at first 6 obs
+coffee_tweets%>%
+  head()
+
+#look at structure
+coffee_tweets%>%
+  str()
+
+  
+coffee_short<-coffee_tweets%>%
+  select(id, screen_name, created_at, text, favourites_count, retweet_count)
+
+coffee_short<-coffee_tweets%>%
+  select(id,full_text)
+
+
+coffee_tweets%>%write_csv("coffee_short_7_10_21.csv")
+coffee_tweets<-read_csv("C:/Users/Admin/Documents/R/coffee_short_7_10_21.csv")
+
+```
+
+### Explore frequency of tweets
+
+
+```{r}
+ts_plot(coffee_tweets, "hours") +
+  labs(x = NULL, y = NULL,
+       title = "Frequency of tweets with coffee",
+       subtitle = paste0(format(min(coffee_tweets$created_at), "%d %B %Y"), " to ", format(max(coffee_tweets$created_at),"%d %B %Y")),
+       caption = "Coffee tweets Data collected from Twitter") +
+  theme_minimal()
+```
+
+### Top tweeting location
+Most Twitter users turn off their location in their privacy settings but those that don’t add valuable location information to their tweets. We can count unique values of the “place_full_name” variable to obtain the most frequent tweet location.
+
+
+```{r}
+coffee_tweets %>% 
+  filter(!is.na(source)) %>% 
+  count(source, sort = TRUE) %>% 
+  top_n(5)
+```
+
+### Most frequently shared link
+
+The `urls_expanded_url` variable provides the full URL of shared links. Here we exclude tweets without a shared link, count, sort the frequency of links in descending order and print the top 5.
+
+```{r}
+coffee_tweets %>% 
+  filter(!is.na(source)) %>% 
+  count(source, sort = TRUE) %>% 
+  top_n(5)
+```
+### Most retweeted tweet
+
+`retweet_count` variable shows retweeting. We sort all the tweets in descending order by the size of the “retweet_count”, slice off the top row and print the date, handle, text and retweet count.
+
+```{r}
+coffee_tweets %>% 
+  arrange(-retweet_count) %>%
+  slice(1) %>% 
+  select(created_at, full_text, text, retweet_count)
+```
+
+## Embed tweets in the RMarkdown
+
+`gadenbuie/tweetrmd: Embed Tweets in R Markdown`
+Easily embed Tweets anywhere R Markdown turns plain text into HTML.
+
+https://github.com/gadenbuie/tweetrmd
+
+
+```{r}
+#devtools::install_github("gadenbuie/tweetrmd")
+#devtools::install_github('rstudio/webshot2')
+library(tweetrmd)
+tweet_screenshot(tweet_url("Lindt", "823930875213676544"))
+
+```
+
+### Most liked tweet
+
+To find the most liked tweet we can sort our tweets by the “favorite_count” variable in descending order and print the rows with the top 5 highest counts.
+
+```{r}
+coffee_tweets %>% 
+  arrange(-favorite_count) %>%
+  top_n(5, favorite_count) %>% 
+  select(created_at, full_text, text, favorite_count)
+
+
+```
+
+### Top tweeters
+
+To identify the most active tweeters we can use the “screen_name” variable to tot up the number of tweets by Twitter handle. We can then add back the @ symbol using the paste0() function.
+
+```{r}
+coffee_tweets %>% 
+  count(full_text, sort = TRUE) %>%
+  top_n(10) %>%
+  mutate(full_text = paste0("@", full_text))
+```
+
+## Top emoji
+
+To identify the most frequently used emoji we can use the `ji_extract_all()` function from the `emo` package. 
+
+This function extracts all the emojis from the text of each tweet. 
+
+We can then use the unnest() function from the tidyr package to split out the emojis, count, sort in descending order and identify the top 10.
+
+```{r}
+#devtools::install_github("hadley/emo")
+library(emo)
+coffee_tweets %>%
+  mutate(emoji = ji_extract_all(text)) %>%
+  unnest(cols = c(emoji)) %>%
+  count(emoji, sort = TRUE) %>%
+  top_n(10)
+```
+
+
+### Top hashtags
+
+To pull out the hashtags from the text of each tweet we first need to convert the text into a one word per row format using the `unnest_tokens()` function from the `tidytext` package. 
+We then select only those terms that have a hashtag, count them, sort in descending order and pick the top 10.
+```{r}
+library(tidytext)
+coffee_tweets %>% 
+  unnest_tokens(hashtag, text, "tweets", to_lower = FALSE) %>%
+  filter(str_detect(hashtag, "^#"),
+        hashtag != "#ClimateEmergency") %>%
+  count(hashtag, sort = TRUE) %>%
+  top_n(10)
+```
+
+### Top mentions
+
+Here we tokenise the text of each tweet and use `str_detect()` from the `tidyverse` package to filter out words that start with an @ .
+```{r}
+coffee_tweets %>% 
+  unnest_tokens(mentions, text, "tweets", to_lower = FALSE) %>%
+  filter(str_detect(mentions, "^@")) %>%  
+  count(mentions, sort = TRUE) %>%
+  top_n(10)
+```
