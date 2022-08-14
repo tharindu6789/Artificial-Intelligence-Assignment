@@ -175,22 +175,22 @@ We can then use the unnest() function from the tidyr package to split out the em
 To pull out the hashtags from the text of each tweet we first need to convert the text into a one word per row format using the `unnest_tokens()` function from the `tidytext` package. 
 We then select only those terms that have a hashtag, count them, sort in descending order and pick the top 10.
 ```{r}
-library(tidytext)
-coffee_tweets %>% 
-  unnest_tokens(hashtag, text, "tweets", to_lower = FALSE) %>%
-  filter(str_detect(hashtag, "^#"),
-        hashtag != "#ClimateEmergency") %>%
-  count(hashtag, sort = TRUE) %>%
-  top_n(10)
+# library(tidytext)
+# coffee_tweets %>% 
+#   unnest_tokens(hashtag, text, "tweets", to_lower = FALSE) %>%
+#   filter(str_detect(hashtag, "^#"),
+#         hashtag != "#ClimateEmergency") %>%
+#   count(hashtag, sort = TRUE) %>%
+#   top_n(10)
 ```
 
 ### Top mentions
 
 Here we tokenise the text of each tweet and use `str_detect()` from the `tidyverse` package to filter out words that start with an @ .
 ```{r}
-coffee_tweets %>% 
-  unnest_tokens(mentions, text, "tweets", to_lower = FALSE) %>%
-  filter(str_detect(mentions, "^@")) %>%  
-  count(mentions, sort = TRUE) %>%
-  top_n(10)
+# coffee_tweets %>% 
+#   unnest_tokens(mentions, text, "tweets", to_lower = FALSE) %>%
+#   filter(str_detect(mentions, "^@")) %>%  
+#   count(mentions, sort = TRUE) %>%
+#   top_n(10)
 ```
