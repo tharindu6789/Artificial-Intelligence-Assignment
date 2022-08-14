@@ -46,20 +46,20 @@ coffee_tweets<-search_tweets(
 Cleaner version:
 
 ```{r}
-#look at first 6 obs
-coffee_tweets%>%
-  head()
-
-#look at structure
-coffee_tweets%>%
-  str()
-
-  
-coffee_short<-coffee_tweets%>%
-  select(id, screen_name, created_at, text, favourites_count, retweet_count)
-
-coffee_short<-coffee_tweets%>%
-  select(id,full_text)
+# #look at first 6 obs
+# coffee_tweets%>%
+#   head()
+# 
+# #look at structure
+# coffee_tweets%>%
+#   str()
+# 
+# 
+# coffee_short<-coffee_tweets%>%
+#   select(id, screen_name, created_at, text, favourites_count, retweet_count)
+# 
+# coffee_short<-coffee_tweets%>%
+#   select(id,full_text)
 
 
 coffee_tweets%>%write_csv("coffee_short_7_10_21.csv")
@@ -120,10 +120,10 @@ https://github.com/gadenbuie/tweetrmd
 
 
 ```{r}
-#devtools::install_github("gadenbuie/tweetrmd")
-#devtools::install_github('rstudio/webshot2')
-library(tweetrmd)
-tweet_screenshot(tweet_url("Lindt", "823930875213676544"))
+# #devtools::install_github("gadenbuie/tweetrmd")
+# #devtools::install_github('rstudio/webshot2')
+# library(tweetrmd)
+# tweet_screenshot(tweet_url("Lindt", "823930875213676544"))
 
 ```
 
@@ -160,13 +160,13 @@ This function extracts all the emojis from the text of each tweet.
 We can then use the unnest() function from the tidyr package to split out the emojis, count, sort in descending order and identify the top 10.
 
 ```{r}
-#devtools::install_github("hadley/emo")
-library(emo)
-coffee_tweets %>%
-  mutate(emoji = ji_extract_all(text)) %>%
-  unnest(cols = c(emoji)) %>%
-  count(emoji, sort = TRUE) %>%
-  top_n(10)
+# #devtools::install_github("hadley/emo")
+# library(emo)
+# coffee_tweets %>%
+#   mutate(emoji = ji_extract_all(text)) %>%
+#   unnest(cols = c(emoji)) %>%
+#   count(emoji, sort = TRUE) %>%
+#   top_n(10)
 ```
 
 
