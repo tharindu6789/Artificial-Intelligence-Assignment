@@ -25,7 +25,7 @@ install.packages("ggmap")
 install.packages("knitr")
 install.packages("dplyr")
 
-library(kableExtra)
+# library(kableExtra)
 library(tidyverse)
 library(rtweet)
 library(ggplot2)
@@ -250,8 +250,8 @@ coffee_tweets %>%
 
 
 
-### 10 Insights of the Most liked tweet
-As per the given dataset, "BMW M8 Competition https://t.co/7y2vYs3zzI	" was the most liked tweet. It was counted as 13243.It shows top 15 most liked retweets
+### List of all accounts that the top tweeter follows and present the first 5
+
 
 ```{r}
 coffee_tweets %>% 
@@ -260,5 +260,17 @@ coffee_tweets %>%
   select(id, text, retweet_count)%>% 
   kable()
 
+```
+
+###  Get a list of followers of the top tweeter and present the first 5
+
+As per the given dataset, "BMW M8 Competition https://t.co/7y2vYs3zzI	" was the most liked tweet. It was counted as 13243.It shows top 15 most liked retweets
+
+```{r}
+coffee_tweets %>% 
+  arrange(-favorite_count) %>%
+  top_n(5, favorite_count) %>% 
+  select(id, text, favorite_count)%>% 
+  kable()
 
 ```
