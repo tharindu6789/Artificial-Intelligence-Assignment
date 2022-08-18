@@ -8,8 +8,13 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+install.packages('kableExtra', repos='https://cloud.r-project.org/')
+install.packages("kableExtra")
+install.packages("hms")
+
 install.packages("rtweet")
 install.packages("emo")
+install.packages("emojifont")
 install.packages("tidytext")
 install.packages("tidyverse")
 
@@ -17,19 +22,24 @@ install.packages("ggplot2")
 install.packages("ggraph")
 install.packages("igraph")
 install.packages("ggmap")
+install.packages("knitr")
+install.packages("dplyr")
 
+library(kableExtra)
 library(tidyverse)
 library(rtweet)
 library(ggplot2)
 library(ggraph)
 library(igraph)
 library(ggmap)
+library(knitr)
+library(dplyr)
 
 ```
 
 ## Data import
 
-Step 1. collect tweets about coffee
+Step 1. collect tweets about BMW
 
 ```{r}
 auth_setup_default()
@@ -40,6 +50,12 @@ coffee_tweets<-search_tweets(
   lang="en",
   retryonratelimit = TRUE
 )
+
+```
+### Get unique values
+```{r}
+
+coffee_tweets %>% distinct()
 
 ```
 
@@ -62,10 +78,13 @@ Cleaner version:
 #   select(id,full_text)
 
 
+
 coffee_tweets%>%write_csv("coffee_short_7_10_21.csv")
 coffee_tweets<-read_csv("C:/Users/Admin/Documents/R/coffee_short_7_10_21.csv")
 
 ```
+
+
 
 ### Explore frequency of tweets
 
@@ -82,34 +101,48 @@ ts_plot(coffee_tweets, "hours") +
 ### Top tweeting location
 Most Twitter users turn off their location in their privacy settings but those that don’t add valuable location information to their tweets. We can count unique values of the “place_full_name” variable to obtain the most frequent tweet location.
 
+### Insights of the location
+According to the data set, None of the users have not been shared their location details in either "place" or "geo". Therefore, location insights cannot be generated in this case.
 
 ```{r}
 coffee_tweets %>% 
-  filter(!is.na(source)) %>% 
-  count(source, sort = TRUE) %>% 
-  top_n(10)
+  filter(!is.na(place)) %>% 
+  count(place, sort = TRUE) %>% 
+  top_n(10)%>% 
+  kable()
+
 ```
 
 ### Most frequently shared link
 
 The `urls_expanded_url` variable provides the full URL of shared links. Here we exclude tweets without a shared link, count, sort the frequency of links in descending order and print the top 5.
 
+
 ```{r}
 coffee_tweets %>% 
   filter(!is.na(source)) %>% 
   count(source, sort = TRUE) %>% 
-  top_n(5)
+  top_n(5)%>% 
+  kable()
 ```
 ### Most retweeted tweet
 
 `retweet_count` variable shows retweeting. We sort all the tweets in descending order by the size of the “retweet_count”, slice off the top row and print the date, handle, text and retweet count.
 
+### Insights of the Most retweeted tweet
+According to the data set,"BMW M8 Competition https://t.co/7y2vYs3zzI" was the most retweeted text. It was created at 2022-08-07. In addition, retweet count was recorded at 1017. It analyzed top 20 most retweeted reviews.
+
 ```{r}
 coffee_tweets %>% 
+  
   arrange(-retweet_count) %>%
-  slice(1) %>% 
-  select(created_at, full_text, text, retweet_count)
+  top_n(20, retweet_count) %>%
+  
+  select(created_at, full_text, text, retweet_count)%>% 
+ 
+  kable()
 ```
+<!-- slice(1) %>%  -->
 
 ## Embed tweets in the RMarkdown
 
@@ -129,13 +162,17 @@ https://github.com/gadenbuie/tweetrmd
 
 ### Most liked tweet
 
-To find the most liked tweet we can sort our tweets by the “favorite_count” variable in descending order and print the rows with the top 5 highest counts.
+To find the most liked tweet we can sort our tweets by the “favorite_count” variable in descending order and print the rows with the top 15 highest counts.\
+
+### Insights of the Most liked tweet
+As per the given dataset, "BMW M8 Competition https://t.co/7y2vYs3zzI	" was the most liked tweet. It was counted as 13243.It shows top 15 most liked retweets
 
 ```{r}
 coffee_tweets %>% 
   arrange(-favorite_count) %>%
-  top_n(5, favorite_count) %>% 
-  select(created_at, full_text, text, favorite_count)
+  top_n(15, favorite_count) %>% 
+  select(created_at, full_text, text, favorite_count)%>% 
+  kable()
 
 
 ```
@@ -144,11 +181,16 @@ coffee_tweets %>%
 
 To identify the most active tweeters we can use the “screen_name” variable to tot up the number of tweets by Twitter handle. We can then add back the @ symbol using the paste0() function.
 
+### Insights of the top tweeters
+As per the data analysis results, "
+@Hearing the howl of turbos, seeing the newest BMW ///M models, and getting behind the wheel of my dream car? I wouldn’t miss it for the world! I’m going to BMW ///M Fest 2022! <U+0001F601>" was the top tweeters. It was counted as 32 and top 5 results were shown.
+
 ```{r}
 coffee_tweets %>% 
   count(full_text, sort = TRUE) %>%
-  top_n(10) %>%
-  mutate(full_text = paste0("@", full_text))
+  top_n(5) %>%
+  mutate(full_text = paste0("@", full_text))%>% 
+  kable()
 ```
 
 ## Top emoji
@@ -159,14 +201,19 @@ This function extracts all the emojis from the text of each tweet.
 
 We can then use the unnest() function from the tidyr package to split out the emojis, count, sort in descending order and identify the top 10.
 
+### Insights of the top tweeters
+As per the data analysis results, "
+
 ```{r}
-# #devtools::install_github("hadley/emo")
-# library(emo)
-# coffee_tweets %>%
-#   mutate(emoji = ji_extract_all(text)) %>%
-#   unnest(cols = c(emoji)) %>%
-#   count(emoji, sort = TRUE) %>%
-#   top_n(10)
+# install.packages("devtools")
+# library(devtools)
+# devtools::install_github("hadley/emo")
+
+coffee_tweets %>%
+  mutate(emoji = ji_extract_all(text)) %>%
+  unnest(cols = c(emoji)) %>%
+  count(emoji, sort = TRUE) %>%
+  top_n(10)
 ```
 
 
@@ -174,23 +221,44 @@ We can then use the unnest() function from the tidyr package to split out the em
 
 To pull out the hashtags from the text of each tweet we first need to convert the text into a one word per row format using the `unnest_tokens()` function from the `tidytext` package. 
 We then select only those terms that have a hashtag, count them, sort in descending order and pick the top 10.
+
+### Insights of the top hashtags
+As per the data analysis results, the top hash tag was #BMW". It counted as 834. Also, it provides top 10 hastags.
+
 ```{r}
-# library(tidytext)
-# coffee_tweets %>% 
-#   unnest_tokens(hashtag, text, "tweets", to_lower = FALSE) %>%
-#   filter(str_detect(hashtag, "^#"),
-#         hashtag != "#ClimateEmergency") %>%
-#   count(hashtag, sort = TRUE) %>%
-#   top_n(10)
+library(tidytext)
+coffee_tweets %>%
+  unnest_tokens(hashtag, text, "tweets", to_lower = FALSE) %>%
+  filter(str_detect(hashtag, "^#"),
+        hashtag != "#ClimateEmergency") %>%
+  count(hashtag, sort = TRUE) %>%
+  top_n(10)%>% 
+  kable()
 ```
 
 ### Top mentions
 
 Here we tokenise the text of each tweet and use `str_detect()` from the `tidyverse` package to filter out words that start with an @ .
 ```{r}
-# coffee_tweets %>% 
-#   unnest_tokens(mentions, text, "tweets", to_lower = FALSE) %>%
-#   filter(str_detect(mentions, "^@")) %>%  
-#   count(mentions, sort = TRUE) %>%
-#   top_n(10)
+coffee_tweets %>%
+  unnest_tokens(mentions, full_text, "tweets", to_lower = FALSE) %>%
+  filter(str_detect(mentions, "^@")) %>%
+  count(mentions, sort = TRUE) %>%
+  top_n(10)%>% 
+  kable()
+```
+
+
+
+### 10 Insights of the Most liked tweet
+As per the given dataset, "BMW M8 Competition https://t.co/7y2vYs3zzI	" was the most liked tweet. It was counted as 13243.It shows top 15 most liked retweets
+
+```{r}
+coffee_tweets %>% 
+  arrange(-retweet_count) %>%
+  top_n(5, retweet_count) %>% 
+  select(id, text, retweet_count)%>% 
+  kable()
+
+
 ```
